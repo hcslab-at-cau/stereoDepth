@@ -4,7 +4,7 @@ import time
 import sys
 
 # Set your camera
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture("videoData/2021-07-20 14-31-52wide.MOV")
 
 # Set these for high resolution
 # cap.set(3, 1280)  # width

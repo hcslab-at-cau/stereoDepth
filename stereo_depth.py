@@ -63,6 +63,10 @@ if __name__ == '__main__':
         cap_left = cv2.VideoCapture(args.left_source)
         cap_right = cv2.VideoCapture(args.right_source)
 
+    _, leftFrame = cap_left.retrieve()
+    _, rightFrame = cap_right.retrieve()
+    _, rightFrame = cap_right.retrieve()
+
     K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q = load_stereo_coefficients(args.calibration_file)  # Get cams params
 
     if not cap_left.isOpened() and not cap_right.isOpened():  # If we can't get images from both sources, error

@@ -5,8 +5,8 @@ import argparse
 import sys
 
 # Set the values for your cameras
-capL = cv2.VideoCapture(1)
-capR = cv2.VideoCapture(0)
+capL = cv2.VideoCapture("videoData/2021-07-20 14-10-19.MOV")
+capR = cv2.VideoCapture("videoData/2021-07-20 14-10-19wide.MOV")
 
 # Use these if you need high resolution.
 # capL.set(3, 1024) # width
@@ -15,7 +15,10 @@ capR = cv2.VideoCapture(0)
 # capR.set(3, 1024) # width
 # capR.set(4, 768) # height
 i = 0
-
+if (capL.grab() and capR.grab()):
+    _, leftFrame = capL.retrieve()
+    _, rightFrame = capR.retrieve()
+    _, rightFrame = capR.retrieve()
 
 def main():
     global i
