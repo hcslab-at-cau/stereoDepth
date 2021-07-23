@@ -3,6 +3,28 @@ import cv2
 import argparse
 import sys
 from calibration_store import load_stereo_coefficients
+from threading import Thread
+
+class ThreadCamera(object):
+    def __init__(self, source = 0):
+        self.capture = cv2.VideoCapture(source)
+
+        self.thread = Thread(target=self.update, args= ())
+        self.thread.daemon = True
+        self.thread.start()
+
+        self.status = False
+        self.frame = None
+    
+    def update(self):
+        while True:
+            if self.capture.isOpened():
+                (self.status, self.frame) = self.capture.read()
+
+    def grab_frame(self):
+        if self.status:
+            return self.frame
+        return None
 
 def depth_map(imgL, imgR):
     """ Depth map calculation. Works with SGBM and WLS. Need rectified images, returns depth map ( left to right disparity ) """
@@ -60,57 +82,47 @@ if __name__ == '__main__':
         cap_left = cv2.VideoCapture(args.left_source, cv2.CAP_V4L2)
         cap_right = cv2.VideoCapture(args.right_source, cv2.CAP_V4L2)
     else:
-        cap_left = cv2.VideoCapture(args.left_source)
-        cap_right = cv2.VideoCapture(args.right_source)
+        cap_left = ThreadCamera(args.left_source)
+        cap_right = ThreadCamera(args.right_source)
 
-    _, leftFrame = cap_left.retrieve()
-    _, rightFrame = cap_right.retrieve()
-    _, rightFrame = cap_right.retrieve()
+    leftFrame = cap_left.grab_frame()
+    rightFrame = cap_right.grab_frame()
 
     K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q = load_stereo_coefficients(args.calibration_file)  # Get cams params
 
-    if not cap_left.isOpened() and not cap_right.isOpened():  # If we can't get images from both sources, error
-        print("Can't opened the streams!")
-        sys.exit(-9)
-
     # Change the resolution in need
-    cap_right.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # float
-    cap_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)  # float
+    # cap_right.set(cv2.CAP_PROP_FRAME_WIDTH, 480)  # float
+    # cap_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)  # float
 
-    cap_left.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # float
-    cap_left.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)  # float
+    # cap_left.set(cv2.CAP_PROP_FRAME_WIDTH, 480)  # float
+    # cap_left.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)  # float
 
     while True:  # Loop until 'q' pressed or stream ends
         # Grab&retreive for sync images
-        if not (cap_left.grab() and cap_right.grab()):
-            print("No more frames")
-            break
+        leftFrame = cap_left.grab_frame()
+        rightFrame = cap_right.grab_frame()
+        if leftFrame is not None and rightFrame is not None:
+            height, width, channel = leftFrame.shape  # We will use the shape for remap
 
-        _, leftFrame = cap_left.retrieve()
-        _, rightFrame = cap_right.retrieve()
-        height, width, channel = leftFrame.shape  # We will use the shape for remap
+            # Undistortion and Rectification part!
+            leftMapX, leftMapY = cv2.initUndistortRectifyMap(K1, D1, R1, P1, (width, height), cv2.CV_32FC1)
+            left_rectified = cv2.remap(leftFrame, leftMapX, leftMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+            rightMapX, rightMapY = cv2.initUndistortRectifyMap(K2, D2, R2, P2, (width, height), cv2.CV_32FC1)
+            right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
 
-        # Undistortion and Rectification part!
-        leftMapX, leftMapY = cv2.initUndistortRectifyMap(K1, D1, R1, P1, (width, height), cv2.CV_32FC1)
-        left_rectified = cv2.remap(leftFrame, leftMapX, leftMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
-        rightMapX, rightMapY = cv2.initUndistortRectifyMap(K2, D2, R2, P2, (width, height), cv2.CV_32FC1)
-        right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+            # We need grayscale for disparity map.
+            gray_left = cv2.cvtColor(left_rectified, cv2.COLOR_BGR2GRAY)
+            gray_right = cv2.cvtColor(right_rectified, cv2.COLOR_BGR2GRAY)
 
-        # We need grayscale for disparity map.
-        gray_left = cv2.cvtColor(left_rectified, cv2.COLOR_BGR2GRAY)
-        gray_right = cv2.cvtColor(right_rectified, cv2.COLOR_BGR2GRAY)
+            disparity_image = depth_map(gray_left, gray_right)  # Get the disparity map
 
-        disparity_image = depth_map(gray_left, gray_right)  # Get the disparity map
+            # Show the images
+            cv2.imshow('left(R)', left_rectified)
+            cv2.imshow('right(R)', right_rectified)
+            cv2.imshow('Disparity', disparity_image)
 
-        # Show the images
-        cv2.imshow('left(R)', leftFrame)
-        cv2.imshow('right(R)', rightFrame)
-        cv2.imshow('Disparity', disparity_image)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):  # Get key to stop stream. Press q for exit
-            break
+            if cv2.waitKey(1) & 0xFF == ord('q'):  # Get key to stop stream. Press q for exit
+                break
 
     # Release the sources.
-    cap_left.release()
-    cap_right.release()
     cv2.destroyAllWindows()

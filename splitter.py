@@ -16,7 +16,6 @@ def main():
     capL = cv2.VideoCapture(sys.argv[3])
     capR = cv2.VideoCapture(sys.argv[4])
 
-    
     if (capL.grab() and capR.grab()):
         _, leftFrame = capL.retrieve()
         _, rightFrame = capR.retrieve()
@@ -32,8 +31,11 @@ def main():
         _, leftFrame = capL.retrieve()
         _, rightFrame = capR.retrieve()
 
-        cv2.imwrite(sys.argv[1] + "/mav0/cam0/" +str(i)+".png", leftFrame )
-        cv2.imwrite(sys.argv[1]+ "/mav0/cam1/" + str(i)+ ".png" , rightFrame)
+        leftFrame = cv2.cvtColor(leftFrame, cv2.COLOR_BGR2GRAY)
+        rightFrame = cv2.cvtColor(rightFrame, cv2.COLOR_BGR2GRAY)
+
+        cv2.imwrite(sys.argv[1] + "/mav0/cam0/data/" +str(i)+".png", leftFrame )
+        cv2.imwrite(sys.argv[1]+ "/mav0/cam1/data/" + str(i)+ ".png" , rightFrame)
         f.write(str(i) + "\n")
         i += 1 
 

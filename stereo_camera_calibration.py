@@ -10,7 +10,7 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 image_size = None
 
 
-def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, right_prefix, image_format, save_file, square_size, width=9, height=6):
+def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, right_prefix, image_format, save_file, square_size, width=10, height=7):
     """ Stereo calibration and rectification """
     objp, leftp, rightp = load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width, height)
 
@@ -27,7 +27,7 @@ def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, ri
     save_stereo_coefficients(save_file, K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q)
 
 
-def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width=9, height=6):
+def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width=10, height=7):
     global image_size
     pattern_size = (width, height)  # Chessboard size!
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(8,6,0)
@@ -114,9 +114,9 @@ if __name__ == '__main__':
     parser.add_argument('--left_dir', type=str, required=True, help='left images directory path')
     parser.add_argument('--right_dir', type=str, required=True, help='right images directory path')
     parser.add_argument('--image_format', type=str, required=True, help='image format, png/jpg')
-    parser.add_argument('--width', type=int, required=False, help='chessboard width size, default is 9')
-    parser.add_argument('--height', type=int, required=False, help='chessboard height size, default is 6')
-    parser.add_argument('--square_size', type=float, required=False, help='chessboard square size')
+    parser.add_argument('--width', type=int, required=True, help='chessboard width size, default is 10')
+    parser.add_argument('--height', type=int, required=True, help='chessboard height size, default is 7')
+    parser.add_argument('--square_size', type=float, required=True, help='chessboard square size')
     parser.add_argument('--save_file', type=str, required=True, help='YML file to save stereo calibration matrices')
 
     args = parser.parse_args()
