@@ -6,6 +6,15 @@ This project is a basis for stereo vision.  After calibration process, you can t
 
 ## Usage
 
+### Calibration 쉬운방법 추가
+
+calibration.sh 파일에 변수들의 값을 적절하게 수정한 다음
+
+```bash
+chmod +x calibration.sh
+sh calibration.sh
+```
+
 ### Get images from single camera
 
 Don't forget to create directory with mkdir and set your cameras in the code. Example usage:
@@ -28,22 +37,6 @@ This code is for fixed stereo set. There are some cameras that give you the most
 
 ```bash
 python grabSeperate.py directory savedDirectory prefixOfImages
-```
-
-### Single camera calibration
-
-Example usage:
-
-```bash
-python single_camera_calibration.py data\leftFixedStereo --image_format png --prefix left --square_size 0.025 --width 9 --height 6 --save_file left_cam.yml
-```
-
-### Stereo camera calibration
-
-Example usage:
-
-```bash
-python stereo_camera_calibration.py --left_file left_cam.yml --right_file right_cam.yml --left_prefix left --right_prefix right --left_dir bothImagesFixedStereo --right_dir bothImagesFixedStereo --image_format png --square_size 0.025 --save_file stereo_cam.yml
 ```
 
 ### Disparity map
