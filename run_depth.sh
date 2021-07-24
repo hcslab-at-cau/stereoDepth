@@ -1,7 +1,7 @@
 #!/bin/bash
 
-dir_left="http://165.194.27.184:10001"
-dir_right="http://165.194.27.184:10002"
+dir_left="http://165.194.27.184:10003"
+dir_right="http://165.194.27.184:10004"
 calibration_file="iphone11_calibration/stereo_calib.yml"
 
 echo "run disparity map" 
