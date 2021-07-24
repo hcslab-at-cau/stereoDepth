@@ -6,46 +6,33 @@ This project is a basis for stereo vision.  After calibration process, you can t
 
 ## Usage
 
-### Calibration 쉬운방법 추가
+### Calibration 하는 방법
 
-calibration.sh 파일에 변수들의 값을 적절하게 수정한 다음
+*중요 카메라는 반드시 가로로 놓여있어야 한다.
+
+calibration.sh 파일에 변수들의 값을 우선 수정해야 함.
+
+특히 left_addr과 right_addr은 웹캠 주소가 아니라 비디오 파일일 수 있음
+
+수정한 다음.
 
 ```bash
 chmod +x calibration.sh
 sh calibration.sh
 ```
+적절한 RMSE가 나올때까지 수행하면 된다.
 
-### Get images from single camera
+또, 마지막에 나오는 green 라인이 왼쪽과 오른쪽 사진에서 같은 점을 지나면 옳게 캘리브레이션이 된 것
 
-Don't forget to create directory with mkdir and set your cameras in the code. Example usage:
+### depth map 확인
 
+run_depth.sh 파일에 변수들의 값을 수정해야 함.
+
+캘리브레이션과 마찬가지로 dir_left와 dir_right는 비디오파일일 수 있음
+
+수정한 다음
 ```bash
-python get_images.py directory 0
+chmod +x run_depth.sh
+sh run_depth.sh
 ```
-
-### Get stereo images
-
-Don't forget to set your cameras. Check if the right is right and left is left. Example usage:
-
-```bash
-python getStereoImages.py directory 0
-```
-
-### Split concat images
-
-This code is for fixed stereo set. There are some cameras that give you the most possible sync. They are taking the images and concat with hardware. You see that you have only one camera but actually you are getting two images as one. So we need seperation before proceed. Get images as single camera and run this code. Example usage:
-
-```bash
-python grabSeperate.py directory savedDirectory prefixOfImages
-```
-
-### Disparity map
-
-Example usage:
-
-```bash
-python stereo_depth.py --calibration_file data\stereo_cam.yml --left_source data\left_1541067450.avi --right_source data\right_1541067450.avi --is_real_time 0
-
-```
-
 
