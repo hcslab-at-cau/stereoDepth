@@ -12,7 +12,7 @@ image_size = None
 
 def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, right_prefix, image_format, save_file, square_size, width=10, height=7):
     """ Stereo calibration and rectification """
-    objp, leftp, rightp = load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width, height)
+    objp, leftp, rightp, pair_images = load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width, height)
 
     K1, D1 = load_coefficients(left_file)
     K2, D2 = load_coefficients(right_file)
@@ -21,14 +21,17 @@ def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, ri
     # flag |= cv2.CALIB_FIX_INTRINSIC
     flag |= cv2.CALIB_USE_INTRINSIC_GUESS
     ret, K1, D1, K2, D2, R, T, E, F = cv2.stereoCalibrate(objp, leftp, rightp, K1, D1, K2, D2, image_size)
+    
     print("Stereo calibration rms: ", ret)
     R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(K1, D1, K2, D2, image_size, R, T, flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.9)
-
+    #checkEpipolarLine(pair_images, K1, D1, K2, D2, R1, R2, P1, P2, Q)
     save_stereo_coefficients(save_file, K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q)
 
+    
 
 def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_format, square_size, width=10, height=7):
     global image_size
+
     pattern_size = (width, height)  # Chessboard size!
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(8,6,0)
     objp = np.zeros((height * width, 3), np.float32)
@@ -67,7 +70,7 @@ def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_form
         sys.exit(-1)
 
     pair_images = zip(left_images, right_images)  # Pair the images for single loop handling
-
+    pair_images2 = zip(left_images, right_images)
     # Iterate through the pairs and find chessboard corners. Add them to arrays
     # If openCV can't find the corners in one image, we discard the pair.
     for left_im, right_im in pair_images:
@@ -101,7 +104,29 @@ def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_form
             continue
 
     image_size = gray_right.shape  # If you have no acceptable pair, you may have an error here.
-    return [objpoints, left_imgpoints, right_imgpoints]
+    return [objpoints, left_imgpoints, right_imgpoints, pair_images2]
+
+def checkEpipolarLine(pair_images, K1, D1, K2, D2, R1, R2, P1, P2, Q):
+    for left_im, right_im in pair_images:
+        leftFrame = cv2.imread(left_im)
+        rightFrame = cv2.imread(right_im)
+        
+        height, width, _ = leftFrame.shape
+
+        leftMapX, leftMapY = cv2.initUndistortRectifyMap(K1, D1, R1, P1, (width, height), cv2.CV_32FC1)
+        left_rectified = cv2.remap(leftFrame, leftMapX, leftMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+        rightMapX, rightMapY = cv2.initUndistortRectifyMap(K2, D2, R2, P2, (width, height), cv2.CV_32FC1)
+        right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+
+        concateImg = cv2.hconcat([left_rectified, right_rectified])
+
+        for iter in range(width):
+            if iter % 64 == 0:
+                concateImg = cv2.line(concateImg, (0,iter), (width * 2, iter), (0, 255, 0), 3)
+
+        cv2.imshow("img",concateImg)
+        cv2.waitKey(2000)
+
 
 
 if __name__ == '__main__':

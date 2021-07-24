@@ -33,11 +33,11 @@ def depth_map(imgL, imgR):
 
     left_matcher = cv2.StereoSGBM_create(
         minDisparity=-1,
-        numDisparities=5*16,  # max_disp has to be dividable by 16 f. E. HH 192, 256
+        numDisparities= 10 * 16,  # max_disp has to be dividable by 16 f. E. HH 192, 256
         blockSize=window_size,
-        P1=8 * 3 * window_size,
+        P1= 8 * 3 * window_size,
         # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
-        P2=32 * 3 * window_size,
+        P2= 32 * 3 * window_size,
         disp12MaxDiff=12,
         uniquenessRatio=10,
         speckleWindowSize=50,
@@ -48,8 +48,8 @@ def depth_map(imgL, imgR):
     right_matcher = cv2.ximgproc.createRightMatcher(left_matcher)
     # FILTER Parameters
     lmbda = 80000
-    sigma = 1.3
-    visual_multiplier = 6
+    sigma = 2.0
+    visual_multiplier = 2.0
 
     wls_filter = cv2.ximgproc.createDisparityWLSFilter(matcher_left=left_matcher)
     wls_filter.setLambda(lmbda)
