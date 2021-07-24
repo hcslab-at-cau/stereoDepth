@@ -24,7 +24,7 @@ def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, ri
     
     print("Stereo calibration rms: ", ret)
     R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(K1, D1, K2, D2, image_size, R, T, flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.9)
-    #checkEpipolarLine(pair_images, K1, D1, K2, D2, R1, R2, P1, P2, Q)
+    checkEpipolarLine(pair_images, K1, D1, K2, D2, R1, R2, P1, P2, Q)
     save_stereo_coefficients(save_file, K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q)
 
     
@@ -118,12 +118,17 @@ def checkEpipolarLine(pair_images, K1, D1, K2, D2, R1, R2, P1, P2, Q):
         rightMapX, rightMapY = cv2.initUndistortRectifyMap(K2, D2, R2, P2, (width, height), cv2.CV_32FC1)
         right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
 
-        concateImg = cv2.hconcat([left_rectified, right_rectified])
-
-        for iter in range(width):
-            if iter % 64 == 0:
-                concateImg = cv2.line(concateImg, (0,iter), (width * 2, iter), (0, 255, 0), 3)
-
+        concateImg = None
+        if width >= height:
+            concateImg =  cv2.hconcat([left_rectified, right_rectified])
+            for iter in range(width):
+                if iter % (width / 10) == 0:
+                    concateImg = cv2.line(concateImg, (0,iter), (width * 2, iter), (0, 255, 0), 3)
+        else:
+            concateImg = cv2.vconcat([left_rectified, right_rectified])
+            for iter in range(height):
+                if iter % (height / 10) == 0:
+                    concateImg = cv2.line(concateImg, (iter, 0 ), (iter, height * 2), (0, 255, 0), 3)
         cv2.imshow("img",concateImg)
         cv2.waitKey(2000)
 
